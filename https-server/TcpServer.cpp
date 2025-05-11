@@ -1,12 +1,15 @@
 #include "TcpServer.h"
 #include <winsock2.h>
 #include <Windows.h>
+#include <ws2tcpip.h>
 #include <stdio.h>
 #include <iostream>
 #include <string>
 
 // link with ws_32 in order to use WSAGetLastError()
 #pragma comment(lib,"Ws2_32.lib")
+
+#define _WINSOCK_DEPRECATED_NO_WARNINGS
 
 using namespace http;
 
@@ -20,9 +23,9 @@ TcpServer::~TcpServer()
 	CleanServer();
 }
 
-void TcpServer::exitWithError(const std::string& message)
+void TcpServer::exitWithError(const std::string& error_message)
 {
-	std::cout << message;
+	std::cout << error_message << std::endl;
 	exit(EXIT_FAILURE);
 }
 
@@ -36,14 +39,26 @@ void TcpServer::StartServer()
 	WORD wVersion = MAKEWORD(2, 0);
 	int startup = WSAStartup(wVersion, &m_wsaData);
 	if (startup != 0) {
-		exitWithError("WSAStartup failed. Error: " + std::to_string(WSAGetLastError()) + '\n');
+		exitWithError("WSAStartup failed. Error: " + std::to_string(WSAGetLastError()));
 	}
 
 	SOCKET sock = socket(AF_INET, SOCK_STREAM, 0);
 	if (sock == INVALID_SOCKET) {
-		exitWithError("Could not create socket. Error: " + std::to_string(WSAGetLastError()) + '\n');
+		exitWithError("Could not create socket. Error: " + std::to_string(WSAGetLastError()));
 	}
 	m_socket = sock;
+
+	m_socket_address.sin_family = AF_INET;
+	m_socket_address.sin_port = htons(m_port);
+	int result = InetPtonA(AF_INET, m_ip_address.c_str(), &m_socket_address.sin_addr.s_addr);
+	if (result != 1) {
+		exitWithError("Ip address is incorrect. Error: " + std::to_string(WSAGetLastError()));
+	}
+
+	int bind_result = bind(m_socket, (sockaddr*)&m_socket_address, sizeof(m_socket_address));
+	if (bind_result == SOCKET_ERROR) {
+		exitWithError("Could not bind to socket. Error: " + std::to_string(WSAGetLastError()));
+	}
 }
 
 void TcpServer::CleanServer()

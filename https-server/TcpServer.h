@@ -12,7 +12,7 @@ namespace http {
 			TcpServer(const std::string ip_address, const int port);
 			~TcpServer();
 		private:
-			void exitWithError(const std::string& message);
+			void exitWithError(const std::string& error_message);
 			void log(const std::string& message);
 			void StartServer();
 			void CleanServer();
@@ -21,6 +21,7 @@ namespace http {
 			SOCKET m_socket;
 			std::string m_ip_address;
 			int m_port;
+			struct sockaddr_in m_socket_address;
 	};
 }
 
