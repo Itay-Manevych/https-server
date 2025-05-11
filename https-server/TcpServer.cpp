@@ -5,6 +5,7 @@
 #include <stdio.h>
 #include <iostream>
 #include <string>
+#include <sstream>
 
 // link with ws_32 in order to use WSAGetLastError()
 #pragma comment(lib,"Ws2_32.lib")
@@ -13,9 +14,10 @@
 
 using namespace http;
 
-TcpServer::TcpServer(const std::string ip_address, const int port) : m_ip_address(ip_address), m_port(port)
+TcpServer::TcpServer(const std::string ip_address, const int port)
 {
-	StartServer();
+	StartServer(ip_address, port);
+	StartListen();
 }
 
 TcpServer::~TcpServer()
@@ -34,7 +36,7 @@ void TcpServer::log(const std::string& message)
 	std::cout << message << std::endl;
 }
 
-void TcpServer::StartServer()
+void TcpServer::StartServer(const std::string ip_address, const int port)
 {
 	WORD wVersion = MAKEWORD(2, 0);
 	int startup = WSAStartup(wVersion, &m_wsaData);
@@ -49,8 +51,8 @@ void TcpServer::StartServer()
 	m_socket = sock;
 
 	m_socket_address.sin_family = AF_INET;
-	m_socket_address.sin_port = htons(m_port);
-	int result = InetPtonA(AF_INET, m_ip_address.c_str(), &m_socket_address.sin_addr.s_addr);
+	m_socket_address.sin_port = htons(port);
+	int result = InetPtonA(AF_INET, ip_address.c_str(), &m_socket_address.sin_addr.s_addr);
 	if (result != 1) {
 		exitWithError("Ip address is incorrect. Error: " + std::to_string(WSAGetLastError()));
 	}
@@ -78,5 +80,25 @@ void TcpServer::CleanServer()
 	}
 
 	log("Server cleaned succesfully");
+}
+
+void TcpServer::StartListen()
+{
+	int result = listen(m_socket, 20);
+	if (result == SOCKET_ERROR) {
+		exitWithError("Could not listen to socket. Error: " + std::to_string(WSAGetLastError()));
+	}
+
+	char ip_string[INET_ADDRSTRLEN]; // Length that is enough for ipv4
+	const char* ip_result = InetNtopA(AF_INET, &m_socket_address.sin_addr, ip_string, sizeof(ip_string));
+	if (!ip_result) {
+		log("Failed to convert binary IP address to string. Error: " + std::to_string(WSAGetLastError()));
+		return;
+	}
+
+	std::ostringstream ss;
+	ss << "*** Server is listening on IP: " << ip_string
+		<< " Port: " << ntohs(m_socket_address.sin_port) << " ***";
+	log(ss.str());
 }
 

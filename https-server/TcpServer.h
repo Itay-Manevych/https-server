@@ -14,8 +14,9 @@ namespace http {
 		private:
 			void exitWithError(const std::string& error_message);
 			void log(const std::string& message);
-			void StartServer();
+			void StartServer(const std::string ip_address, const int port);
 			void CleanServer();
+			void StartListen();
 
 			WSADATA m_wsaData;
 			SOCKET m_socket;
