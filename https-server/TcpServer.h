@@ -19,7 +19,7 @@ namespace http {
 
 			WSADATA m_wsaData;
 			SOCKET m_socket;
-			std::string m_ipaddress;
+			std::string m_ip_address;
 			int m_port;
 	};
 }
