@@ -10,7 +10,7 @@
 
 using namespace http;
 
-TcpServer::TcpServer()
+TcpServer::TcpServer(const std::string ip_address, const int port) : m_ip_address(ip_address), m_port(port)
 {
 	StartServer();
 }
