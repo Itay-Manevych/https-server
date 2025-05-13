@@ -28,7 +28,6 @@ namespace http {
 			WSADATA m_wsaData;
 			SOCKET m_socket;
 			struct sockaddr_in m_socket_address;
-			static HttpsServer* g_serverInstance;
 
 			// used for thread pool:
 			std::queue<SOCKET> m_client_queue;
