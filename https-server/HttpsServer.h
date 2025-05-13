@@ -1,6 +1,6 @@
 #pragma once
-#ifndef TCP_SERVER_INCLUDED
-#define TCP_SERVER_INCLUDED
+#ifndef HTTP_SERVER_INCLUDED
+#define HTTP_SERVER_INCLUDED
 
 #include <WinSock2.h>
 #include <iostream>
@@ -38,4 +38,4 @@ namespace http {
 	};
 }
 
-#endif // !TCP_SERVER_INCLUDED
+#endif // !HTTP_SERVER_INCLUDED
