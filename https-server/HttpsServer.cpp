@@ -2,11 +2,12 @@
 #include <winsock2.h>
 #include <Windows.h>
 #include <ws2tcpip.h>
-#include <stdio.h>
-#include <iostream>
 #include <string>
+#include <iostream>
 #include <sstream>
 #include <thread>
+#include <filesystem>
+#include <fstream>
 
 // link with ws_32 in order to use WSAGetLastError()
 #pragma comment(lib,"Ws2_32.lib")
@@ -172,6 +173,63 @@ void HttpsServer::AcceptClient()
 	m_condition.notify_one();
 }
 
+void HttpsServer::HandleGetRequest(SOCKET client_socket, std::string& request) {
+	size_t start = request.find(" ") + 2;
+	size_t end = request.find(" ", start);
+	int target_length = end - start;
+	std::string request_target = request.substr(start, target_length);
+
+	std::string file_path = request_target + ".txt";
+
+	// file does not exist here
+	if (!std::filesystem::exists(file_path)) {
+		std::cerr << "File does not exist: " << file_path << std::endl;
+
+		std::string error_response =
+			"HTTP/1.1 404 Not Found\r\n"
+			"Content-Length: 0\r\n\r\n";
+
+		send(client_socket, error_response.c_str(), error_response.size(), 0);
+		closesocket(client_socket);
+		return;
+	}
+
+	std::ifstream file(file_path);
+
+	// problem opening file
+	if (!file.is_open()) {
+		std::cerr << "Failed to open file: " << file_path << std::endl;
+
+		std::string error_response =
+			"HTTP/1.1 500 Internal Server Error\r\n"
+			"Content-Length: 0\r\n\r\n";
+
+		send(client_socket, error_response.c_str(), error_response.size(), 0);
+		closesocket(client_socket);
+		return;
+	}
+
+	std::string line;
+	std::string response(file_path + " found succesfully! it's content is:\n");
+	while (getline(file, line)) {
+		response += line + "\n";
+	}
+
+	// Construct the response header
+	std::string header = "HTTP/1.1 200 OK\r\n"
+		"Content-Type: text/plain\r\n"
+		"Content-Length: " + std::to_string(response.size()) + "\r\n"
+		"\r\n";
+
+	// Send the response header
+	send(client_socket, header.c_str(), header.size(), 0);
+
+	// Send the file content
+	send(client_socket, response.c_str(), response.size(), 0);
+
+	file.close();
+}
+
 void HttpsServer::HandleClient(SOCKET client_socket)
 {
 	char buffer[4096];
@@ -183,6 +241,15 @@ void HttpsServer::HandleClient(SOCKET client_socket)
 	for (int i = 0; i < number_of_bytes; i++) {
 		std::cout << buffer[i];
 	}
+
+	std::string request(buffer);
+
+	// Get Request
+	if (request.find("GET") == 0) {
+		HandleGetRequest(client_socket, request);
+	}
+
+	closesocket(client_socket);
 }
 
 
