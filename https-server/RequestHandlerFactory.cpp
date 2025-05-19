@@ -1,5 +1,4 @@
 #include "RequestHandlerFactory.h"
-#include "UnknownRequestHandler.h"
 
 std::unique_ptr<BaseRequestHandler> RequestHandlerFactory::CreateHandler(const std::string& request)
 {
@@ -11,5 +10,5 @@ std::unique_ptr<BaseRequestHandler> RequestHandlerFactory::CreateHandler(const s
         return std::make_unique<PostRequestHandler>();
     }
 
-    return std::make_unique<UnkownRequestHandler>();
+    return std::make_unique<NonSupportedRequestHandler>();
 }

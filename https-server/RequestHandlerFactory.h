@@ -1,8 +1,8 @@
-#include "GetRequestHandler.h"
 #pragma once
 #include <memory>
 #include "GetRequestHandler.h"
 #include "PostRequestHandler.h"
+#include "NonSupportedRequestHandler.h"
 
 class RequestHandlerFactory {
 	public:

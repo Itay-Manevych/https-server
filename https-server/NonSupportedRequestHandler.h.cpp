@@ -1,6 +1,6 @@
-#include "UnknownRequestHandler.h"
+#include "NonSupportedRequestHandler.h"
 
-void UnkownRequestHandler::HandleRequest(SOCKET client_socket, const std::string& request)
+void NonSupportedRequestHandler::HandleRequest(SOCKET client_socket, const std::string& request)
 {
 	std::string error_response = "This method has not been implemented, or is unkown!";
 
