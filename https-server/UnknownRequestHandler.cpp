@@ -2,7 +2,7 @@
 
 void UnkownRequestHandler::HandleRequest(SOCKET client_socket, const std::string& request)
 {
-	std::string error_response = "Unkown Method!";
+	std::string error_response = "This method has not been implemented, or is unkown!";
 
 	std::string header = "HTTP/1.1 501 Not Implemented\r\n"
 		"Content-Type: text/plain\r\n"
