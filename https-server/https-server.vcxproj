@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup Label="ProjectConfigurations">
     <ProjectConfiguration Include="Debug|Win32">
@@ -129,11 +129,21 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="BaseRequestHandler.h" />
+    <ClInclude Include="GetRequestHandler.h" />
     <ClInclude Include="HttpsServer.h" />
+    <ClInclude Include="PostRequestHandler.h" />
+    <ClInclude Include="RequestHandlerFactory.h" />
+    <ClInclude Include="UnknownRequestHandler.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="Server.cpp" />
+    <ClCompile Include="BaseRequestHandler.cpp" />
+    <ClCompile Include="GetRequestHandler.cpp" />
+    <ClCompile Include="PostRequestHandler.cpp" />
+    <ClCompile Include="RequestHandlerFactory.cpp" />
+    <ClCompile Include="Main.cpp" />
     <ClCompile Include="HttpsServer.cpp" />
+    <ClCompile Include="UnknownRequestHandler.cpp" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="hello.txt" />

@@ -22,7 +22,6 @@ namespace http {
 			void CleanServer();
 			void AcceptClient();
 			void HandleClient(SOCKET client_socket);
-			void HandleGetRequest(SOCKET client_socket, std::string& request);
 			void CreateThreadPool(int num_of_threads);
 
 			// used in order to create a connection between sockets

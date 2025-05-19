@@ -8,6 +8,7 @@
 #include <thread>
 #include <filesystem>
 #include <fstream>
+#include "RequestHandlerFactory.h"
 
 // link with ws_32 in order to use WSAGetLastError()
 #pragma comment(lib,"Ws2_32.lib")
@@ -173,82 +174,33 @@ void HttpsServer::AcceptClient()
 	m_condition.notify_one();
 }
 
-void HttpsServer::HandleGetRequest(SOCKET client_socket, std::string& request) {
-	size_t start = request.find(" ") + 2;
-	size_t end = request.find(" ", start);
-	int target_length = end - start;
-	std::string request_target = request.substr(start, target_length);
-
-	std::string file_path = request_target + ".txt";
-
-	// file does not exist here
-	if (!std::filesystem::exists(file_path)) {
-		std::cerr << "File does not exist: " << file_path << std::endl;
-
-		std::string error_response =
-			"HTTP/1.1 404 Not Found\r\n"
-			"Content-Length: 0\r\n\r\n";
-
-		send(client_socket, error_response.c_str(), error_response.size(), 0);
-		closesocket(client_socket);
-		return;
-	}
-
-	std::ifstream file(file_path);
-
-	// problem opening file
-	if (!file.is_open()) {
-		std::cerr << "Failed to open file: " << file_path << std::endl;
-
-		std::string error_response =
-			"HTTP/1.1 500 Internal Server Error\r\n"
-			"Content-Length: 0\r\n\r\n";
-
-		send(client_socket, error_response.c_str(), error_response.size(), 0);
-		closesocket(client_socket);
-		return;
-	}
-
-	std::string line;
-	std::string response(file_path + " found succesfully! it's content is:\n");
-	while (getline(file, line)) {
-		response += line + "\n";
-	}
-
-	// Construct the response header
-	std::string header = "HTTP/1.1 200 OK\r\n"
-		"Content-Type: text/plain\r\n"
-		"Content-Length: " + std::to_string(response.size()) + "\r\n"
-		"\r\n";
-
-	// Send the response header
-	send(client_socket, header.c_str(), header.size(), 0);
-
-	// Send the file content
-	send(client_socket, response.c_str(), response.size(), 0);
-
-	file.close();
-}
-
 void HttpsServer::HandleClient(SOCKET client_socket)
 {
-	char buffer[4096];
-	int number_of_bytes = recv(client_socket, buffer, 4096, 0);
+	constexpr int BUFFER_SIZE = 4096; // size that is typicaly enough for http requests.
+	char buffer[BUFFER_SIZE + 1]; // +1 for null terminator
+	bool keep_alive = true;
 
-	// add a null terminator
-	buffer[number_of_bytes] = '\0';
+	// in order to keep a persistent connection and not make another, new, tcp connection.
+	while (keep_alive) {
+		int number_of_bytes = recv(client_socket, buffer, 4096, 0);
 
-	for (int i = 0; i < number_of_bytes; i++) {
-		std::cout << buffer[i];
+		if (number_of_bytes <= 0) {
+			break;
+		}
+
+		// add a null terminator
+		buffer[number_of_bytes] = '\0';
+
+		std::string request(buffer);
+
+		// Check if the request contains "Connection: close"
+		if (request.find("Connection: close") != std::string::npos) {
+			keep_alive = false;
+		}
+
+		auto handler = RequestHandlerFactory{}.CreateHandler(request);
+		handler->HandleRequest(client_socket, request);
 	}
-
-	std::string request(buffer);
-
-	// Get Request
-	if (request.find("GET") == 0) {
-		HandleGetRequest(client_socket, request);
-	}
-
 	closesocket(client_socket);
 }
 
